@@ -5,7 +5,7 @@ from flask_jwt import JWT, jwt_required, current_identity
 from security import authenticate, identity
 
 app = Flask(__name__)
-app.config['PROPAGATE_EXCEPTIONS'] = True # To allow flask propagating exception even if debug is set to false on app
+app.config['PROPAGATE_EXCEPTIONS'] = True  # To allow flask propagating exception even if debug is set to false on app
 app.secret_key = 'jose'
 api = Api(app)
 
@@ -13,13 +13,14 @@ jwt = JWT(app, authenticate, identity)
 
 items = []
 
+
 class Item(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('price',
-        type=float,
-        required=True,
-        help="This field cannot be left blank!"
-    )
+                        type=float,
+                        required=True,
+                        help="This field cannot be left blank!"
+                        )
 
     @jwt_required()
     def get(self, name):
@@ -27,13 +28,13 @@ class Item(Resource):
 
     def post(self, name):
         if next(filter(lambda x: x['name'] == name, items), None) is not None:
-            return {'message': "An item with name '{}' already exists.".format(name)}
+            return {'message': "An item with name '{}' already exists.".format(name)},400
 
         data = Item.parser.parse_args()
 
         item = {'name': name, 'price': data['price']}
         items.append(item)
-        return item
+        return item, 201
 
     @jwt_required()
     def delete(self, name):
@@ -53,9 +54,11 @@ class Item(Resource):
             item.update(data)
         return item
 
+
 class ItemList(Resource):
     def get(self):
         return {'items': items}
+
 
 api.add_resource(Item, '/item/<string:name>')
 api.add_resource(ItemList, '/items')
